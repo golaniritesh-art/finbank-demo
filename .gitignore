@@ -1,0 +1,11 @@
+.codex/
+node_modules/
+playwright-report/
+test-results/
+.playwright-mcp/
+
+*.log
+*.tmp
+*.png
+.env
+.env.*

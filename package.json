@@ -1,0 +1,14 @@
+{
+  "name": "finbank-playwright-tests",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:e2e": "playwright test tests/login-logout-flow.spec.js --reporter=line",
+    "test:e2e:headed": "playwright test tests/login-logout-flow.spec.js --headed --reporter=line"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0"
+  }
+}
