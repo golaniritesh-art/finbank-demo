@@ -5,7 +5,7 @@ import { LoginPage } from './pages/LoginPage.js';
 const DEMO_USERNAME = 'demo.user';
 const DEMO_PASSWORD = 'Password123!';
 
-test.describe('FinBank login to logout flow', () => {
+test.describe('FinBank login to logout flow @regression', () => {
   test('authenticates demo user, displays dashboard, and logs out', async ({ page }) => {
     const loginPage = new LoginPage(page);
     const dashboardPage = new DashboardPage(page);

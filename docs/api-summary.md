@@ -1,85 +1,76 @@
 # FinBank API/Network Summary
 
-Source: Playwright network monitoring against `https://finbank-qa.lovable.app/` on 2026-04-30.
+Source: Playwright inspection against `https://finbank-qa.lovable.app/` on 2026-05-02.
 
-## Flow Monitored
+## Current API Status
 
-1. Open `/login`
-2. Login with demo credentials:
-   - Username: `demo.user`
-   - Password: `Password123!`
-3. Land on `/dashboard`
-4. Click authenticated navigation links:
-   - Dashboard
-   - Accounts
-   - Transfer
-   - Transactions
-   - Bill Pay
-   - Statements
-   - Investments
-   - QA Lab
-5. Directly open authenticated URLs:
-   - `/accounts`
-   - `/transfer`
-   - `/transactions`
-   - `/bill-pay`
-   - `/statements`
-   - `/investments`
-   - `/qa-lab`
+FinBank now exposes documented Supabase Edge Function APIs from the authenticated `/api-docs` page.
 
-## API Calls Observed During Authenticated Navigation
+Base URL observed:
 
-No XHR, fetch, `/api`, or `/~api` responses were observed while navigating authenticated pages after login.
+```text
+https://uatmbflddljtyqbyxzvc.supabase.co/functions/v1
+```
 
-The pages appear to be rendered from client-side/static demo data for the monitored flows. Account balances, transactions, transfer UI, bill pay UI, statements UI, investments UI, and QA Lab navigation did not trigger observable API calls in the Playwright network capture.
+The app bundle contains the public Supabase anon key used by the API docs. The automated API tests currently discover the base URL and anon key from the hosted app bundle instead of committing the key directly.
+
+## Documented Endpoints
+
+| Method | Endpoint | Purpose | Verified |
+| --- | --- | --- | --- |
+| GET | `/accounts` | Return checking, savings, and credit card accounts | Yes |
+| GET | `/transactions` | Return transaction history; supports `accountId` and `limit` filters | Yes |
+| POST | `/transfers` | Move money between accounts | Yes |
+| GET | `/statements` | Return monthly statement metadata; supports `accountId` filter | Yes |
+| POST | `/billpayments` | Create a bill payment to a saved payee | Yes |
+
+## Verified Behavior
+
+The executable API coverage lives in `tests/api-contract.spec.js`.
+
+Verified responses:
+
+- `GET /accounts` returns `200` with 3 accounts.
+- `GET /transactions` returns `200` with transaction history.
+- `GET /transactions?accountId=acc-chk-001&limit=2` returns `200` with 2 checking transactions.
+- `GET /statements` returns `200` with 6 statements.
+- `GET /statements?accountId=acc-chk-001` returns `200` with checking statements.
+- `POST /transfers` returns `200` for a valid transfer.
+- `POST /transfers` returns `400` for invalid amount.
+- `POST /transfers` returns `400` for same source and destination account.
+- `POST /billpayments` returns `200` for a valid bill payment.
+- `POST /billpayments` returns `404` for an unknown payee.
+
+## UI Network Behavior
+
+Authenticated UI navigation still does not appear to rely on these business APIs for every rendered page. During browser navigation, the app continues to emit Lovable analytics traffic such as:
+
+```text
+POST https://finbank-qa.lovable.app/~api/analytics
+```
+
+The existence of callable business APIs should therefore be treated separately from whether each UI page fetches data live during navigation.
 
 ## Route Behavior Observed
 
 | Action | Result |
 | --- | --- |
 | Login | `/login` -> `/dashboard` |
-| Click Dashboard | Stayed on `/dashboard` |
+| Click Dashboard | Routed to `/dashboard` |
 | Click Accounts | Routed to `/accounts` |
 | Click Transfer | Routed to `/transfer` |
 | Click Transactions | Routed to `/transactions` |
 | Click Bill Pay | Routed to `/bill-pay` |
 | Click Statements | Routed to `/statements` |
 | Click Investments | Routed to `/investments` |
+| Click API Docs | Routed to `/api-docs` |
 | Click QA Lab | Routed to `/qa-lab` |
-| Direct `/accounts` | Redirected to `/dashboard` |
-| Direct `/transfer` | Redirected to `/dashboard` |
-| Direct `/transactions` | Redirected to `/dashboard` |
-| Direct `/bill-pay` | Redirected to `/dashboard` |
-| Direct `/statements` | Redirected to `/dashboard` |
-| Direct `/investments` | Redirected to `/dashboard` |
-| Direct `/qa-lab` | Redirected to `/dashboard` |
+
+Direct authenticated URLs may redirect depending on current session state, so route guard behavior should be tested explicitly instead of inferred from navigation checks.
 
 ## Testing Implications
 
-- Current FinBank E2E tests should not expect real business API calls for dashboard, accounts, transfer, transactions, bill pay, statements, investments, or QA Lab navigation.
-- API tests remain aspirational until endpoint documentation or backend source is available.
-- E2E tests can still monitor network health by failing on unexpected `4xx` or `5xx` responses.
-- Since clicked navigation works but direct authenticated URLs redirect to `/dashboard`, route behavior should be captured explicitly in E2E tests.
-- Business data assertions are likely against static client-side demo data, so exact-value assertions are acceptable only if the demo fixture is intentionally stable.
-
-## Recommended Playwright Network Guard
-
-```js
-const failedResponses = [];
-
-page.on('response', response => {
-  const url = response.url();
-  const isAppRequest = url.includes('finbank-qa.lovable.app');
-
-  if (isAppRequest && response.status() >= 400) {
-    failedResponses.push({
-      method: response.request().method(),
-      url,
-      status: response.status(),
-    });
-  }
-});
-
-// After the flow:
-expect(failedResponses).toEqual([]);
-```
+- API tests are no longer aspirational; `tests/api-contract.spec.js` is executable coverage.
+- API write tests mutate shared demo state by creating transfers and bill payments. These should be isolated from build smoke tests if a deterministic reset mechanism is not available.
+- UI assertions should avoid fixed balances, exact transaction totals, and fixed recent transaction rows because API-created records change visible data.
+- CI regression should prefer non-destructive smoke coverage plus read-only API contract checks. Mutation tests can run manually, on schedule, or against resettable test data.

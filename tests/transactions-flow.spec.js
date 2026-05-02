@@ -17,7 +17,7 @@ async function loginAndOpenTransactions(page) {
   return new TransactionsPage(page);
 }
 
-test.describe('FinBank transactions flow', () => {
+test.describe('FinBank transactions flow @regression', () => {
   test('searches and filters account activity', async ({ page }) => {
     const transactionsPage = await loginAndOpenTransactions(page);
 

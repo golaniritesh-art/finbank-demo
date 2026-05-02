@@ -26,7 +26,7 @@ export class BillPayPage {
     await this.page.getByRole('option', { name: new RegExp(accountName) }).click();
   }
 
-  async schedulePayment(amount) {
+  async makePayment(amount) {
     await this.amountInput.fill(amount);
     await this.submitButton.click();
   }

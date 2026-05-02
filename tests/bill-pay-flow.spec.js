@@ -17,8 +17,8 @@ async function loginAndOpenBillPay(page) {
   return new BillPayPage(page);
 }
 
-test.describe('FinBank bill pay flow', () => {
-  test('schedules a payment to a saved payee', async ({ page }) => {
+test.describe('FinBank bill pay flow @mutation', () => {
+  test('makes a payment to a saved payee', async ({ page }) => {
     const billPayPage = await loginAndOpenBillPay(page);
 
     // -- Step 1: Verify saved payee bill pay page --
@@ -36,8 +36,8 @@ test.describe('FinBank bill pay flow', () => {
     await billPayPage.selectFromAccount('High-Yield Savings');
     await expect(billPayPage.fromAccountSelect).toContainText('High-Yield Savings');
 
-    // -- Step 3: Submit payment and verify confirmation --
-    await billPayPage.schedulePayment('125.50');
+    // -- Step 3: Pay saved payee and verify confirmation --
+    await billPayPage.makePayment('125.50');
 
     await expect(billPayPage.toastStatus).toContainText(/Confirmation (BP\d+|CONF-[A-Z0-9]+)/);
     await expect(billPayPage.paymentStatus).toBeVisible();

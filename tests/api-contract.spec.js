@@ -33,8 +33,8 @@ async function discoverApiConfig(request) {
   };
 }
 
-test.describe('FinBank API contract', () => {
-  test('lists accounts with expected banking fields', async ({ request }) => {
+test.describe('FinBank API contract @api', () => {
+  test('lists accounts with expected banking fields @regression', async ({ request }) => {
     const api = await discoverApiConfig(request);
 
     // -- Step 1: Request account list --
@@ -68,7 +68,7 @@ test.describe('FinBank API contract', () => {
     );
   });
 
-  test('lists and filters transaction history', async ({ request }) => {
+  test('lists and filters transaction history @regression', async ({ request }) => {
     const api = await discoverApiConfig(request);
 
     // -- Step 1: Request full transaction history --
@@ -103,7 +103,7 @@ test.describe('FinBank API contract', () => {
     expect(filteredBody.transactions.every((transaction) => transaction.accountId === 'acc-chk-001')).toBe(true);
   });
 
-  test('lists monthly statements and supports account filtering', async ({ request }) => {
+  test('lists monthly statements and supports account filtering @regression', async ({ request }) => {
     const api = await discoverApiConfig(request);
 
     // -- Step 1: Request all statements --
@@ -135,33 +135,10 @@ test.describe('FinBank API contract', () => {
     expect(filteredBody.statements.every((statement) => statement.accountId === 'acc-chk-001')).toBe(true);
   });
 
-  test('creates a transfer and rejects invalid transfer requests', async ({ request }) => {
+  test('rejects invalid transfer requests @regression', async ({ request }) => {
     const api = await discoverApiConfig(request);
 
-    // -- Step 1: Submit a valid transfer --
-    const validResponse = await request.post(`${api.baseUrl}/transfers`, {
-      headers: api.headers,
-      data: {
-        fromAccountId: 'acc-chk-001',
-        toAccountId: 'acc-sav-002',
-        amount: 1,
-        note: 'Playwright API contract check',
-      },
-    });
-
-    expect(validResponse.status()).toBe(200);
-    const validBody = await validResponse.json();
-    expect(validBody).toEqual(
-      expect.objectContaining({
-        transactionId: expect.stringMatching(/^TX\d+$/),
-        status: 'POSTED',
-        message: 'Transfer completed successfully',
-      }),
-    );
-    expect(typeof validBody.fromBalance).toBe('number');
-    expect(typeof validBody.toBalance).toBe('number');
-
-    // -- Step 2: Verify invalid amount validation --
+    // -- Step 1: Verify invalid amount validation --
     const invalidAmountResponse = await request.post(`${api.baseUrl}/transfers`, {
       headers: api.headers,
       data: {
@@ -179,7 +156,7 @@ test.describe('FinBank API contract', () => {
       }),
     );
 
-    // -- Step 3: Verify same-account transfers are rejected --
+    // -- Step 2: Verify same-account transfers are rejected --
     const sameAccountResponse = await request.post(`${api.baseUrl}/transfers`, {
       headers: api.headers,
       data: {
@@ -201,31 +178,10 @@ test.describe('FinBank API contract', () => {
     );
   });
 
-  test('creates a bill payment and rejects an unknown payee', async ({ request }) => {
+  test('rejects an unknown bill payment payee @regression', async ({ request }) => {
     const api = await discoverApiConfig(request);
 
-    // -- Step 1: Schedule a valid bill payment --
-    const validResponse = await request.post(`${api.baseUrl}/billpayments`, {
-      headers: api.headers,
-      data: {
-        payeeId: 'pay-1',
-        fromAccountId: 'acc-chk-001',
-        amount: 1,
-        paymentDate: '2026-05-10',
-      },
-    });
-
-    expect(validResponse.status()).toBe(200);
-    const validBody = await validResponse.json();
-    expect(validBody).toEqual(
-      expect.objectContaining({
-        paymentId: expect.stringMatching(/^BP\d+$/),
-        status: 'SCHEDULED',
-        confirmationNumber: expect.stringMatching(/^CONF-[A-Z0-9]+$/),
-      }),
-    );
-
-    // -- Step 2: Verify unknown payee validation --
+    // -- Step 1: Verify unknown payee validation --
     const unknownPayeeResponse = await request.post(`${api.baseUrl}/billpayments`, {
       headers: api.headers,
       data: {
@@ -241,5 +197,59 @@ test.describe('FinBank API contract', () => {
     expect(unknownPayeeBody).toEqual({
       error: 'payee_not_found',
     });
+  });
+
+  test('creates a transfer @mutation', async ({ request }) => {
+    const api = await discoverApiConfig(request);
+
+    // -- Step 1: Submit a valid transfer --
+    const response = await request.post(`${api.baseUrl}/transfers`, {
+      headers: api.headers,
+      data: {
+        fromAccountId: 'acc-chk-001',
+        toAccountId: 'acc-sav-002',
+        amount: 1,
+        note: 'Playwright mutation smoke check',
+      },
+    });
+
+    // -- Step 2: Verify transfer confirmation contract --
+    expect(response.status()).toBe(200);
+    const body = await response.json();
+    expect(body).toEqual(
+      expect.objectContaining({
+        transactionId: expect.stringMatching(/^TX\d+$/),
+        status: 'POSTED',
+        message: 'Transfer completed successfully',
+      }),
+    );
+    expect(typeof body.fromBalance).toBe('number');
+    expect(typeof body.toBalance).toBe('number');
+  });
+
+  test('creates a bill payment @mutation', async ({ request }) => {
+    const api = await discoverApiConfig(request);
+
+    // -- Step 1: Create a valid bill payment --
+    const response = await request.post(`${api.baseUrl}/billpayments`, {
+      headers: api.headers,
+      data: {
+        payeeId: 'pay-1',
+        fromAccountId: 'acc-chk-001',
+        amount: 1,
+        paymentDate: '2026-05-10',
+      },
+    });
+
+    // -- Step 2: Verify payment confirmation contract --
+    expect(response.status()).toBe(200);
+    const body = await response.json();
+    expect(body).toEqual(
+      expect.objectContaining({
+        paymentId: expect.stringMatching(/^BP\d+$/),
+        status: 'SCHEDULED',
+        confirmationNumber: expect.stringMatching(/^CONF-[A-Z0-9]+$/),
+      }),
+    );
   });
 });
