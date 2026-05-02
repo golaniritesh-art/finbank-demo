@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "playwright test",
+    "test:regression": "playwright test --workers=1",
     "test:e2e": "playwright test tests/login-logout-flow.spec.js --reporter=line",
     "test:e2e:headed": "playwright test tests/login-logout-flow.spec.js --headed --reporter=line"
   },

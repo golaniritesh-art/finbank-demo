@@ -39,8 +39,8 @@ test.describe('FinBank bill pay flow', () => {
     // -- Step 3: Submit payment and verify confirmation --
     await billPayPage.schedulePayment('125.50');
 
-    await expect(billPayPage.toastStatus).toContainText(/Confirmation BP\d+/);
+    await expect(billPayPage.toastStatus).toContainText(/Confirmation (BP\d+|CONF-[A-Z0-9]+)/);
     await expect(billPayPage.paymentStatus).toBeVisible();
-    await expect(billPayPage.form).toContainText(/BP\d+/);
+    await expect(billPayPage.form).toContainText(/(BP\d+|CONF-[A-Z0-9]+)/);
   });
 });

@@ -1,4 +1,4 @@
-name: Playwright Tests
+name: FinBank Regression Tests
 
 on:
   push:
@@ -9,9 +9,13 @@ on:
       - main
   workflow_dispatch:
 
+concurrency:
+  group: finbank-regression-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  test:
-    name: Run Playwright suite
+  regression:
+    name: Run regression suite
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -31,8 +35,8 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Run Playwright tests
-        run: npx playwright test
+      - name: Run regression tests
+        run: npm run test:regression
 
       - name: Upload Playwright HTML report
         if: always()

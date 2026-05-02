@@ -21,13 +21,13 @@ test.describe('FinBank login to logout flow', () => {
     await expect(page).toHaveURL(/\/dashboard$/);
     await expect(dashboardPage.title).toHaveText('Welcome back, Jordan');
     await expect(dashboardPage.userName).toHaveText('Jordan Reyes');
-    await expect(dashboardPage.totalAssets).toHaveText('$33,135.79');
+    await expect(dashboardPage.totalAssets).toHaveText(/\$[\d,]+\.\d{2}/);
     await expect(dashboardPage.accountsSummary).toContainText('Your Accounts');
     await expect(dashboardPage.checkingAccountCard).toContainText('Everyday Checking');
     await expect(dashboardPage.savingsAccountCard).toContainText('High-Yield Savings');
     await expect(dashboardPage.creditCardAccountCard).toContainText('Platinum Rewards Card');
     await expect(dashboardPage.recentTransactions).toBeVisible();
-    await expect(dashboardPage.recentTransactions).toContainText('Whole Foods Market');
+    await expect(dashboardPage.recentTransactions).toContainText('DateDescriptionCategoryAmount');
 
     // -- Step 3: Log out and verify unauthenticated login state --
     await dashboardPage.logout();

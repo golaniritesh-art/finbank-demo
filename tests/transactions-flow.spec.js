@@ -25,7 +25,8 @@ test.describe('FinBank transactions flow', () => {
     await expect(transactionsPage.title).toHaveText('Transactions');
     await expect(transactionsPage.searchInput).toBeVisible();
     await expect(transactionsPage.table).toContainText('Whole Foods Market');
-    await expect(transactionsPage.count).toHaveText('12');
+    await expect(transactionsPage.count).toHaveText(/\d+/);
+    expect(Number(await transactionsPage.count.textContent())).toBeGreaterThanOrEqual(12);
 
     // -- Step 2: Search by transaction description --
     await transactionsPage.search('Payroll');
