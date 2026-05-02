@@ -20,7 +20,7 @@ Scope note: this workspace is a Playwright test suite against the hosted app at 
 | Unit | 0 | 6 | Amount parsing, balance integrity, same-account prevention, transaction filters, statement availability, payment reference formatting | < 1s |
 | API/Integration | 7 tests | 8-10 tests | Accounts, transactions, statements, transfer validation, bill payment validation, auth/route protection if exposed | 10-30s |
 | Component | 0 | 8 | Login form, dashboard summary, transactions table/filter states, bill pay form, route guard UI, loading/empty states | 10-20s |
-| E2E | 5 tests | 6-8 tests | Critical hosted-app journeys, route behavior, browser session behavior, smoke checks across major banking workflows | 2-5m |
+| E2E | 7 tests | 6-8 tests | Critical hosted-app journeys, route behavior, browser session behavior, smoke checks across major banking workflows | 2-5m |
 
 The suite has started to move from pure E2E into API coverage. Destructive tests are tagged separately from build regression, and route/session guard coverage has been added for the highest-risk access-control paths.
 
@@ -37,6 +37,7 @@ The suite has started to move from pure E2E into API coverage. Destructive tests
 | `tests/login-logout-flow.spec.js` | TC-001, TC-002, TC-009 | `LoginPage.js`, `DashboardPage.js` | Verifies demo login, dashboard shell, account cards, recent transaction table presence, and logout. Assertions are intentionally tolerant of mutable balances and recent transaction data. |
 | `tests/bill-pay-flow.spec.js` | TC-006, TC-102 | `BillPayPage.js` | Verifies saved payees, account selection, the Make a Payment form, Pay action, toast/status confirmation, and generated payment/confirmation reference. Mutates demo data. |
 | `tests/route-guards.spec.js` | TC-200, TC-201, TC-202 | `LoginPage.js`, `DashboardPage.js` | Verifies anonymous users cannot access dashboard, transfer, or bill pay, and browser back does not restore authenticated content after logout. |
+| `tests/statements-flow.spec.js` | TC-007 | `StatementsPage.js`, `docs/statements-ux.md` | Verifies the live Statements table and row-level Download actions. The current app does not emit a browser download event in headless Chromium. |
 | `tests/transactions-flow.spec.js` | TC-005, TC-304, TC-402 partial | `TransactionsPage.js` | Verifies search, no-results state, type/status/category filters, and visible count behavior. Initial total is tolerant because API-created records change history. |
 
 ## Recommended Regression Split
@@ -59,7 +60,7 @@ The suite has started to move from pure E2E into API coverage. Destructive tests
 | TC-004 | Transfer Funds From Checking To Savings | API + one E2E smoke | API partial | API verifies transfer creation shape and validation, but does not fully assert balance integrity. UI transfer happy path is still missing. |
 | TC-005 | Search And Filter Transactions | E2E now; API/Component later | E2E + API partial | UI filtering is covered; API account/limit filtering is covered. |
 | TC-006 | Pay A Saved Payee | E2E + API | E2E + API partial | UI and API happy paths are covered in the mutation suite. Unknown payee API rejection is covered in regression. |
-| TC-007 | Download Monthly Statement | E2E download + API | API partial | Statement listing/filtering is covered; browser download is missing. |
+| TC-007 | Download Monthly Statement | E2E + API | E2E partial + API partial | Statement listing/filtering is covered by API. E2E verifies available statement rows and enabled Download actions, but the current app does not emit a browser download event. |
 | TC-008 | View Investments And Market News | E2E smoke; API/Component later | Not covered | Needs a lightweight rendered-page smoke unless market/news API is documented. |
 | TC-009 | Logout From FinBank | E2E | E2E | Browser session/navigation behavior is the user-visible contract. |
 | TC-100 | Dashboard Quick Links Route To Correct Features | E2E | Not covered | High-value low-cost navigation regression. |
@@ -97,6 +98,6 @@ The suite has started to move from pure E2E into API coverage. Destructive tests
 3. Add read-only API checks for auth/session behavior if endpoints become documented.
 4. Add read-only API checks for auth/session behavior if endpoints become documented.
 5. Add transfer UI happy-path smoke only if data reset or low-impact test data is available.
-6. Add statement download E2E for TC-007 if browser download behavior is reliable.
+6. Upgrade TC-007 to assert `page.waitForEvent('download')` if the app implements a real browser download.
 7. Move API base URL and anon key discovery to CI secrets if the project can provide stable values.
 8. When frontend/backend source is available, add unit and component tests for business rules, validation, loading states, and empty states.
