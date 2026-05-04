@@ -5,13 +5,16 @@
   "type": "module",
   "scripts": {
     "test": "playwright test",
-    "test:regression": "playwright test --grep @regression --grep-invert @mutation --workers=1",
-    "test:mutation": "playwright test --grep @mutation --workers=1",
+    "test:regression": "playwright test --grep \"@regression\" --grep-invert \"@mutation\" --workers=1",
+    "test:regression:azure": "playwright test --config=playwright.service.config.js --grep \"@regression\" --grep-invert \"@mutation\" --workers=4",
+    "test:mutation": "playwright test --grep \"@mutation\" --workers=1",
     "test:api": "playwright test tests/api-contract.spec.js --workers=1",
     "test:e2e": "playwright test tests/login-logout-flow.spec.js --reporter=line",
     "test:e2e:headed": "playwright test tests/login-logout-flow.spec.js --headed --reporter=line"
   },
   "devDependencies": {
+    "@azure/identity": "^4.13.1",
+    "@azure/playwright": "^1.1.5",
     "@playwright/test": "^1.52.0"
   }
 }
