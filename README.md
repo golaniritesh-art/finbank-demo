@@ -1,3 +1,6 @@
+<img width="1536" height="1024" alt="81b9ff54-1006-4499-8ed2-51351b7229cd" src="https://github.com/user-attachments/assets/2041bf7b-e6d5-45c8-b969-63fbb7cac909" />
+
+
 # FinBank Portal
 
 A modern, responsive online banking demo application built for portfolio showcases and QA automation practice.
